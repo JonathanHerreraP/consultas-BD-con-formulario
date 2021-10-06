@@ -1,0 +1,162 @@
+<h2> Mi Repertorio</h2>
+<br>
+<br>
+<div>
+<!-- Formulario insertar: -->
+  <form id="insertar">
+    <fieldset>
+      <legend>Agregar nueva cancion</legend>
+      Cancion: <input name="nombre" /> <br />
+      Artista: <input maxlength="20" name="artista" /> <br />
+      Tono: <input maxlength="10" name="tono" /> <br />
+      
+      <button>Agregar</button>
+    </fieldset>
+  </form>
+<!-- Formulario editar: -->
+  <form id="editar">
+    <fieldset>
+      <legend>Editar cancion</legend>
+      Nombre:
+      <select>
+        <option selected disabled>Seleccione una cancion</option>
+      </select>
+      <br />
+      Artista: <input maxlength="20" name="artista" /> <br />
+      Tono: <input maxlength="10" name="tono" /> <br />
+      
+      <button>Editar</button>
+    </fieldset>
+  </form>
+<!-- Formulario eliminar: -->
+  <form id="eliminar">
+    <fieldset>
+      <legend>Eliminar Cancion</legend>
+      Nombre:
+      <select>
+        <option selected disabled>Seleccione una cancion</option>
+      </select>
+      <br />
+      <button>Eliminar</button>
+    </fieldset>
+  </form>
+</div>
+
+<!-- Tabla, se llena de forma dinamica en tbody: -->
+<table border="solid">
+  <thead>
+    <th>Cancion</th>
+    <th>Artista</th>
+    <th>Tono</th>
+ 
+  </thead>
+
+  <tbody></tbody>
+</table>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.0/axios.min.js"></script>
+<script>
+
+//Ruta formulario para agregar:
+  document.getElementById("insertar").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const payload = prepararData(e);
+    axios.post("http://localhost:3000/cancion", payload).then((res) => {
+      alert("Cancion insertada correctamente");
+      res.data.code ? alert("Error codigo: " + res.data.code) : getData(e);
+    });
+  });
+
+  // Ruta formulario para editar:
+  document.getElementById("editar").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const payload = prepararData(e);
+    axios.put("http://localhost:3000/cancion", payload).then((res) => {
+      alert("Cancion editada correctamente")
+      res.data.code ? alert("Error codigo: " + res.data.code) : getData(e);
+    });
+  });
+  // Ruta formulario para eliminar:
+  document.getElementById("eliminar").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const cancion = e.target[1].value;
+    axios.delete("http://localhost:3000/cancion?nombre=" + cancion)
+      .then((res) => {
+        alert("Cancion eliminada correctamente");
+        res.data.code ? alert("Error codigo: " + res.data.code) : getData(e);
+      });
+  });
+
+  function prepararData(e) {
+    const cancion = e.target[1].value;
+    const artista = e.target[2].value;
+    const tono = e.target[3].value;
+    
+    return { cancion, artista, tono };
+  }
+
+  function cleanInputs(e) {
+    if (e.target[3]) {
+      e.target[1].value = "";
+      e.target[2].value = "";
+      e.target[3].value = "";
+      
+    }
+  }
+  async function getData(e) {
+    if (e) cleanInputs(e);
+    const data = await axios.get("http://localhost:3000/cancion");
+    let tbody = document.getElementsByTagName("tbody")[0];
+    const ejercicios = data.data.rows;
+
+    // Carga de la tabla en forma dinamica:
+    tbody.innerHTML = "";
+    ejercicios.forEach((e) => {
+      tbody.innerHTML += `
+            <tr>
+                <td>${e.cancion}</td>
+                <td>${e.artista}</td>
+                <td>${e.tono}</td>
+                
+            </tr>
+        `;
+    });
+
+    // Carga  de canciones en los selectores:
+
+    let selectores = document.getElementsByTagName("select");
+
+    selectores[0].innerHTML =
+      "<option selected disabled>Seleccione una cancion</option>";
+    selectores[1].innerHTML =
+      "<option selected disabled>Seleccione una cancion</option>";
+
+    ejercicios.forEach((e, i) => {
+      selectores[0].innerHTML += `
+          <option value="${e.cancion}">${e.cancion}</option>
+        `;
+    });
+    ejercicios.forEach((e, i) => {
+      selectores[1].innerHTML += `
+          <option value="${e.cancion}">${e.cancion}</option>
+        `;
+    });
+  }
+
+  getData();
+</script>
+
+<style>
+  div {
+    display: flex;
+  }
+
+  table {
+    display: inline-block;
+  }
+
+  table td,
+  th {
+    padding: 10px;
+    text-align: center;
+  }
+</style>
